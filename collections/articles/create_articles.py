@@ -1,0 +1,107 @@
+from dotenv import dotenv_values
+import os
+import sys
+import json
+import requests
+from faker import Faker
+from pymongo import MongoClient
+import uuid
+
+# Add the project root and utils path to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../utils')))
+
+from mocks import categories
+from utils.pretty_print import print_green
+
+# Load environment variables from .env file
+env = dotenv_values(".env")
+PEXELS_API_KEY = env.get('PEXELS_API_KEY')
+MONGO_URI_USER = env.get('MONGO_URI_USER')
+MONGO_URI_ARTICLE = env.get('MONGO_URI_ARTICLE')
+OS_CACERT_DIR = env.get('OS_CACERT_DIR')
+
+
+fake = Faker('fr_FR')
+
+os.environ['SSL_CERT_FILE'] = OS_CACERT_DIR
+
+# MongoDB connection
+article_client = MongoClient(MONGO_URI_ARTICLE, tls=True, tlsAllowInvalidCertificates=True)
+user_client = MongoClient(MONGO_URI_USER, tls=True, tlsAllowInvalidCertificates=True)
+
+# Access the collections
+article_collection = article_client.article_dev.article
+user_collection = user_client.user_dev.user
+
+# Fetch Pexels image URLs for product photos
+def get_pexels_image_urls(category):
+    headers = {
+        'Authorization': f'Bearer {PEXELS_API_KEY}'
+    }
+    params = {
+        'query': category,
+        'per_page': 5
+    }
+    response = requests.get('https://api.pexels.com/v1/search', headers=headers, params=params)
+    
+    if response.status_code != 200:
+        print(f"Failed to fetch images from Pexels API: {response.status_code}")
+        return []
+    
+    data = response.json()
+
+    if 'photos' not in data:
+        print(f"Unexpected response structure: {data}")
+        return []
+
+    return [photo['src']['original'] for photo in data['photos']]
+
+# Generate fake articles
+def create_articles():
+    articles = []
+    user_ids = [user["_id"] for user in user_collection.find({}, {"_id": 1})]  
+
+    if not user_ids:
+        print("\033[91m{}\033[00m".format("No users found. Cannot create articles without users."))
+      
+        return
+
+    for i in range(100):
+        category = fake.random_element(elements=list(categories.keys()))
+        subCategory = fake.random_element(elements=categories[category])
+        images = get_pexels_image_urls(category)
+        article = {
+            "version": 1,
+            "owner": fake.random_element(elements=user_ids), 
+            "adTitle": fake.catch_phrase(),
+            "brand": fake.company(),
+            "model": fake.word(),
+            "description": fake.text(),
+            "status": "available",
+            "price": fake.random_int(min=10, max=1000),
+            "manufactureDate": fake.date_this_century().isoformat(),
+            "purchaseDate": fake.date_this_year().isoformat(),
+            "imageUrls": images,
+            "createdAt": fake.iso8601(),
+            "lastModified": fake.iso8601(),
+            "category": category,
+            "subCategory": subCategory,
+            "deliveryType": ["pickup"],
+            "dimensions": {
+                "length": fake.random_int(min=1, max=100),
+                "width": fake.random_int(min=1, max=100),
+                "height": fake.random_int(min=1, max=100),
+                "weight": fake.random_int(min=1, max=100)
+            }
+        }
+        articles.append(article)
+        
+    # Insert articles in DB
+    article_collection.insert_many(articles)
+
+    print_green("Articles successfully created!")
+
+# Create articles
+if __name__ == "__main__":
+    create_articles()

@@ -1,0 +1,4 @@
+requests
+faker
+pymongo
+python-dotenv
