@@ -22,12 +22,6 @@ venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-## Configure VS Code to use the python environment:
-
-Open the Command Palette (Ctrl+Shift+P).
-Type Python: Select Interpreter.
-Choose the interpreter from your virtual environment (venv)
-
 ## Create a .env file, add these values:
 
 ```bash

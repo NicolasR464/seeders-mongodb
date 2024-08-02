@@ -79,6 +79,7 @@ def create_articles():
             "model": fake.word(),
             "description": fake.text(),
             "status": "available",
+            "state": "used",
             "price": fake.random_int(min=10, max=1000),
             "manufactureDate": fake.date_this_century().isoformat(),
             "purchaseDate": fake.date_this_year().isoformat(),
