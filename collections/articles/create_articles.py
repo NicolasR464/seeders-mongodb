@@ -12,11 +12,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../utils')))
 
 from mocks import categories
-from utils.pretty_print import print_green
+from utils.pretty_print import print_green, print_red
 
 # Load environment variables from .env file
 env = dotenv_values(".env")
-PEXELS_API_KEY = env.get('PEXELS_API_KEY')
+PIXABAY_API_KEY = env.get('PIXABAY_API_KEY')
 MONGO_URI_USER = env.get('MONGO_URI_USER')
 MONGO_URI_ARTICLE = env.get('MONGO_URI_ARTICLE')
 OS_CACERT_DIR = env.get('OS_CACERT_DIR')
@@ -34,28 +34,29 @@ user_client = MongoClient(MONGO_URI_USER, tls=True, tlsAllowInvalidCertificates=
 article_collection = article_client.article_dev.article
 user_collection = user_client.user_dev.user
 
-# Fetch Pexels image URLs for product photos
-def get_pexels_image_urls(category):
-    headers = {
-        'Authorization': f'Bearer {PEXELS_API_KEY}'
-    }
+# Fetch Pixabay image URLs for product photos
+def get_pixabay_image_urls(category):
     params = {
-        'query': category,
-        'per_page': 5
+        'key': PIXABAY_API_KEY,
+        'q': category,
+        'image_type': 'photo',
+        'per_page': 3
     }
-    response = requests.get('https://api.pexels.com/v1/search', headers=headers, params=params)
+    response = requests.get('https://pixabay.com/api/', params=params)
     
     if response.status_code != 200:
-        print(f"Failed to fetch images from Pexels API: {response.status_code}")
+        print_red(f"Failed to fetch images from Pixabay API: {response.status_code}")
+        print(response.text)  # Print the response text for more details
         return []
     
     data = response.json()
 
-    if 'photos' not in data:
-        print(f"Unexpected response structure: {data}")
+    if 'hits' not in data:
+        print_red(f"Unexpected response structure: {data}")
         return []
 
-    return [photo['src']['original'] for photo in data['photos']]
+    return [hit['userImageURL'] for hit in data['hits']]
+
 
 # Generate fake articles
 def create_articles():
@@ -67,10 +68,10 @@ def create_articles():
       
         return
 
-    for i in range(100):
+    for i in range(40):
         category = fake.random_element(elements=list(categories.keys()))
         subCategory = fake.random_element(elements=categories[category])
-        images = get_pexels_image_urls(category)
+        images = get_pixabay_image_urls(category)
         article = {
             "version": 1,
             "owner": fake.random_element(elements=user_ids), 
