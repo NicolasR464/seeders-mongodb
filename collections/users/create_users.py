@@ -6,6 +6,8 @@ import requests
 from faker import Faker
 from pymongo import MongoClient
 import uuid
+import time
+
 
 # Add the project root and utils path to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -47,13 +49,13 @@ def create_users():
             "password": fake.password(),
             "sexe": "male" if i % 2 == 0 else "female",
             "birthDate": fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(),
-            "rating": str(fake.random_int(min=0, max=5)),
+            "rating": fake.random_int(min=0, max=5),
             "phoneNumber": fake.phone_number(),
             "address": {
                 "street": fake.street_address(),
                 "city": fake.city(),
-                "postcode": fake.postcode(),
-                "citycode": fake.postcode()[:2],
+                "postcode": int(fake.postcode()),
+                "citycode": int(fake.postcode()[:2]),
                 "floor": fake.random_int(min=0, max=10),
                 "extra": fake.street_suffix(),
                 "geopoints": {
@@ -62,15 +64,15 @@ def create_users():
                 }
             },
             "activityStatus": {
-                "lastConnected": fake.iso8601(),
-                "birthday": fake.date_of_birth(minimum_age=1, maximum_age=3).isoformat()
+                "lastConnected": fake.date_time_between(start_date='-1y', end_date='now').isoformat(),
+            "birthday": fake.date_of_birth(minimum_age=1, maximum_age=3).isoformat(),
             },
             "bankInfo": {
                 "IBAN": fake.iban(),
                 "BIC": fake.swift()
             },
             "avatarUrl": get_avatar_url(),
-            "isPremium": fake.boolean(chance_of_getting_true=20),
+            "isPremium": fake.boolean(chance_of_getting_true=60),
             "favoriteArticles": [],
             "credit": fake.random_int(min=0, max=500),
             "comments": [],
