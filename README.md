@@ -46,4 +46,4 @@ Delete All Documents: `make delete_all`
 
 > If you have connection issues to MongoDB, you might need to download a cacert.pem file from the official [cURL website](https://curl.se/ca/cacert.pem)
 
-> The scripts use [Pexels API](https://www.pexels.com/fr-fr/api/documentation/#guidelines) (limited to 200 requests per hour) to fetch image URLs and the [Multiavatar API](https://multiavatar.com/) to generate avatar URLs.
+> The scripts use [Pixabay API](https://pixabay.com/service/about/api/) (limited to 100 requests per minute) to fetch image URLs and the [Multiavatar API](https://multiavatar.com/) to generate avatar URLs.
