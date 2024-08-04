@@ -6,8 +6,7 @@ import requests
 from faker import Faker
 from pymongo import MongoClient
 import uuid
-import time
-
+from datetime import datetime, timedelta
 
 # Add the project root and utils path to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -40,6 +39,13 @@ def get_avatar_url():
 def create_users():
     users = []
     for i in range(100):
+
+        max_date = datetime.now()
+        min_date = max_date - timedelta(days=730)
+
+        last_connected_str = fake.date_time_between(start_date=min_date, end_date=max_date).isoformat()
+        birthday_str = fake.date_time_between(start_date=min_date, end_date=max_date).isoformat()
+
         user = {
             "version": 1,
             "pseudo": fake.user_name() + "_f",
@@ -48,7 +54,7 @@ def create_users():
             "email": fake.email(),
             "password": fake.password(),
             "sexe": "male" if i % 2 == 0 else "female",
-            "birthDate": fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(),
+            "birthDate": datetime.strptime(fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(), '%Y-%m-%d'),
             "rating": fake.random_int(min=0, max=5),
             "phoneNumber": fake.phone_number(),
             "address": {
@@ -59,13 +65,13 @@ def create_users():
                 "floor": fake.random_int(min=0, max=10),
                 "extra": fake.street_suffix(),
                 "geopoints": {
-                    "latitude": float(fake.latitude()),
-                    "longitude": float(fake.longitude())
+                    "type": "Point",
+                    "coordinates": [float(fake.longitude()), float(fake.latitude())]
                 }
             },
             "activityStatus": {
-                "lastConnected": fake.date_time_between(start_date='-1y', end_date='now').isoformat(),
-            "birthday": fake.date_of_birth(minimum_age=1, maximum_age=3).isoformat(),
+                "lastConnected": datetime.strptime(last_connected_str, '%Y-%m-%dT%H:%M:%S.%f'),
+                "birthday": datetime.strptime(birthday_str, '%Y-%m-%dT%H:%M:%S.%f')
             },
             "bankInfo": {
                 "IBAN": fake.iban(),
