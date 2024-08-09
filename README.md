@@ -5,21 +5,21 @@ This project contains scripts for seeding MongoDB collections with fake data for
 ## Activate the python environment on macOs and Linux:
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 ```
 
 ## Or activate the python environment on Windows:
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 venv\Scripts\activate
 ```
 
 ## Then install Python libs:
 
 ```bash
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Create a .env file, add these values:
