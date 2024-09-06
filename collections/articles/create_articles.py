@@ -6,7 +6,7 @@ import requests
 from faker import Faker
 from pymongo import MongoClient
 import uuid
-from datetime import datetime
+from datetime import datetime,timezone
 
 
 # Add the project root and utils path to PYTHONPATH
@@ -87,8 +87,8 @@ def create_articles():
             "manufactureDate": fake.date_this_century().isoformat(),
             "purchaseDate": fake.date_this_year().isoformat(),
             "imageUrls": images,
-           "createdAt": datetime.utcnow(),
-            "lastModified": datetime.utcnow(),
+            "createdAt": datetime.now(timezone.utc).isoformat(),  
+            "lastModified":datetime.now(timezone.utc).isoformat(), 
             "category": category,
             "subCategory": subCategory,
             "deliveryType": ["pickup"],

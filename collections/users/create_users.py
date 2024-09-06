@@ -6,7 +6,7 @@ import requests
 from faker import Faker
 from pymongo import MongoClient
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Add the project root and utils path to PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -40,7 +40,8 @@ def create_users():
     users = []
     for i in range(100):
 
-        max_date = datetime.now()
+        # Use timezone-aware current and past dates
+        max_date = datetime.now(timezone.utc)
         min_date = max_date - timedelta(days=730)
 
         last_connected_str = fake.date_time_between(start_date=min_date, end_date=max_date).isoformat()
@@ -54,7 +55,7 @@ def create_users():
             "email": fake.email(),
             "password": fake.password(),
             "sexe": "male" if i % 2 == 0 else "female",
-            "birthDate": datetime.strptime(fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(), '%Y-%m-%d'),
+            "birthDate": fake.date_of_birth(minimum_age=18, maximum_age=90).isoformat(),  # ISO 8601
             "rating": fake.random_int(min=0, max=5),
             "phoneNumber": fake.phone_number(),
             "address": {
@@ -70,8 +71,8 @@ def create_users():
                 }
             },
             "activityStatus": {
-                "lastConnected": datetime.strptime(last_connected_str, '%Y-%m-%dT%H:%M:%S.%f'),
-                "birthday": datetime.strptime(birthday_str, '%Y-%m-%dT%H:%M:%S.%f')
+                "lastConnected": datetime.strptime(last_connected_str, '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=timezone.utc),  
+                "birthday": datetime.strptime(birthday_str, '%Y-%m-%dT%H:%M:%S.%f').replace(tzinfo=timezone.utc) 
             },
             "bankInfo": {
                 "IBAN": fake.iban(),
